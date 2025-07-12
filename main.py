@@ -117,10 +117,42 @@ def recommend():
     cast_details = {cast_names[i]:[cast_ids[i], cast_profiles[i], cast_bdays[i], cast_places[i], cast_bios[i]] for i in range(len(cast_places))}
 
     if(imdb_id != ""):
-        # web scraping to get user reviews from IMDB site
-        sauce = urllib.request.urlopen('https://www.imdb.com/title/{}/reviews?ref_=tt_ov_rt'.format(imdb_id)).read()
-        soup = bs.BeautifulSoup(sauce,'lxml')
-        soup_result = soup.find_all("div",{"class":"text show-more__control"})
+        import requests
+
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+        }
+        url = f'https://www.imdb.com/title/{imdb_id}/reviews?ref_=tt_ov_rt'
+
+        try:
+            response = requests.get(url, headers=headers)
+            if response.status_code == 200:
+                soup = bs.BeautifulSoup(response.text, 'lxml')
+                soup_result = soup.find_all("div", {"class": "text show-more__control"})
+
+                reviews_list = []
+                reviews_status = []
+
+                for review in soup_result:
+                    if review.string:
+                        reviews_list.append(review.string)
+                        movie_vector = vectorizer.transform([review.string])
+                        pred = clf.predict(movie_vector)
+                        reviews_status.append('Positive' if pred else 'Negative')
+
+                movie_reviews = {
+                    reviews_list[i]: reviews_status[i]
+                    for i in range(len(reviews_list))
+                }
+
+            else:
+                print(f"[IMDB ERROR] Status code: {response.status_code}")
+                movie_reviews = {}
+
+        except Exception as e:
+            print(f"[IMDB EXCEPTION] {e}")
+            movie_reviews = {}
+
 
         reviews_list = [] # list of reviews
         reviews_status = [] # list of comments (good or bad)
