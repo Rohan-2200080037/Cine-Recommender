@@ -11,9 +11,10 @@ import requests
 from datetime import date, datetime
 
 # load the nlp model and tfidf vectorizer from disk
-filename = 'nlp_model.pkl'
-clf = pickle.load(open(filename, 'rb'))
-vectorizer = pickle.load(open('tranform.pkl','rb'))
+import pickle
+clf = pickle.load(open("models/nlp_model.pkl", "rb"))
+vectorizer = pickle.load(open("models/tranform.pkl", "rb"))
+
     
 # converting list of string to list (eg. "["abc","def"]" to ["abc","def"])
 def convert_to_list(my_list):
